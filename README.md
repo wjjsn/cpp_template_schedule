@@ -12,3 +12,16 @@ ninja -C build/
 # 运行示例
 ./build/schedule
 ```
+
+### 在你的项目中使用
+
+在subproject中添加`template_schedule.wrap`
+
+```ini
+[wrap-git]
+url = https://github.com/wjjsn/cpp_template_schedule.git
+revision = HEAD
+
+[provide]
+dependency_names = template_schedule
+```
