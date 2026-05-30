@@ -21,3 +21,8 @@ exe = executable(
 )
 
 test('basic', exe)
+
+template_schedule_dep = declare_dependency(
+    include_directories: include_directories('.'),
+)
+meson.override_dependency('template_schedule', template_schedule_dep)
