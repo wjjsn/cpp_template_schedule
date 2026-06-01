@@ -1,5 +1,3 @@
-// #include <iostream>
-#include <tuple>
 #include <cstdint>
 
 // 为了代码可读性，先将确定的类型进行别名定义
@@ -22,6 +20,9 @@ private:
     // 静态内存：记录上一次触发的时间戳（初始化为 0）
     static inline uint64_t lastTriggerTimes[TimerCount] = { 0 };
 
+    // 记录上一次处理到的位置，用于轮询公平性
+    static inline std::size_t currentIndex = 0;
+
 public:
     // 静态轮询函数：在主循环中调用此函数
     static void poll() {
@@ -29,22 +30,29 @@ public:
 
         // 使用编译期展开或循环来处理确定的数组
         for (std::size_t i = 0; i < TimerCount; ++i) {
-            uint64_t interval = Timers[i].interval;
-            CallbackFunc callback = Timers[i].callback;
+            // 计算实际索引：从 currentIndex 开始，跳过已处理的
+            std::size_t idx = (currentIndex + i) % TimerCount;
+            uint64_t interval = Timers[idx].interval;
+            CallbackFunc callback = Timers[idx].callback;
 
             // 首次运行时初始化时间戳，避免启动时瞬间全部触发
-            if (lastTriggerTimes[i] == 0) {
-                lastTriggerTimes[i] = currentTime;
-                continue;
+            if (lastTriggerTimes[idx] == 0) {
+                lastTriggerTimes[idx] = currentTime;
+                break; // 初始化后跳出，下一次 poll 从下一个任务开始检查
             }
 
             // 检查是否到达时间间隔
-            if (currentTime - lastTriggerTimes[i] >= interval) {
+            if (currentTime - lastTriggerTimes[idx] >= interval) {
                 if (callback) {
                     callback(); // 执行回调
                 }
-                lastTriggerTimes[i] = currentTime; // 更新时间
+                lastTriggerTimes[idx] = currentTime; // 更新时间
+                
+                // 一旦执行了某个任务，下一次 poll 从它的下一个任务开始检查
+                currentIndex = (idx + 1) % TimerCount;
             }
         }
+
+        
     }
 };
