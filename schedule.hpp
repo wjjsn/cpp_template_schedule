@@ -25,8 +25,10 @@ private:
 
 public:
     // 静态轮询函数：在主循环中调用此函数
-    static void poll() {
+    // 返回值: 本轮是否触发了至少一个任务 (true=有任务执行, false=空闲)
+    static bool poll() {
         uint64_t currentTime = GetTime();
+        bool fired = false;
 
         // 使用编译期展开或循环来处理确定的数组
         for (std::size_t i = 0; i < TimerCount; ++i) {
@@ -47,12 +49,13 @@ public:
                     callback(); // 执行回调
                 }
                 lastTriggerTimes[idx] = currentTime; // 更新时间
-                
+
                 // 一旦执行了某个任务，下一次 poll 从它的下一个任务开始检查
                 currentIndex = (idx + 1) % TimerCount;
+                fired = true;
             }
         }
 
-        
+        return fired;
     }
 };
