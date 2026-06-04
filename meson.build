@@ -9,18 +9,20 @@ project(
 dependencies = [
 ]
 
-sources = [
-  'schedule.cpp',
-]
-
-exe = executable(
-  'schedule',
-  sources,
-  install : true,
-  dependencies : dependencies,
+sources = files(
+    'schedule.cpp',
 )
 
-test('basic', exe)
+if not meson.is_subproject()
+  exe = executable(
+    'schedule',
+    sources,
+    install : true,
+    dependencies : dependencies,
+  )
+  
+  test('basic', exe)
+endif
 
 template_schedule_dep = declare_dependency(
     include_directories: include_directories('.'),
